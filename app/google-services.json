@@ -1,0 +1,67 @@
+{
+  "project_info": {
+    "project_number": "1002870892238",
+    "project_id": "campusride-944e1",
+    "storage_bucket": "campusride-944e1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1002870892238:android:1ccf57182db4d923d7929f",
+        "android_client_info": {
+          "package_name": "com.example.campusride"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDGcyfvWakv7AcD-m3GicLCN5-huukEaJQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1002870892238:android:881911980eb738cfd7929f",
+        "android_client_info": {
+          "package_name": "com.example.myapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDGcyfvWakv7AcD-m3GicLCN5-huukEaJQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1002870892238:android:b8a8f3aa65643a9ad7929f",
+        "android_client_info": {
+          "package_name": "com.example.projectcampusride"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDGcyfvWakv7AcD-m3GicLCN5-huukEaJQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
