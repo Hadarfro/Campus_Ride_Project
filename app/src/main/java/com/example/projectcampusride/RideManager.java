@@ -1,23 +1,31 @@
 package com.example.projectcampusride;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.DocumentReference;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.OnFailureListener;
+import android.util.Log;
+import androidx.annotation.NonNull;
 
+import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.Tasks;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
+
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 public class RideManager {
-    private static RideManager instance;
-    protected List<Ride> rides;
-    protected List<RideRequest> rideRequests;
+    private static final String TAG = "RideManager";
+    private static final String COLLECTION_RIDES = "rides";
+    private static final String COLLECTION_REQUESTS = "rideRequests";
 
-    RideManager() {
-        this.rides = new ArrayList<>();
+    private static RideManager instance;
+    private final FirebaseFirestore db;
+
+    protected RideManager() {
+        db = FirebaseFirestore.getInstance();
     }
 
     public static synchronized RideManager getInstance() {
@@ -27,86 +35,214 @@ public class RideManager {
         return instance;
     }
 
-    public void createTrip(String driverName, String startLocation, String endLocation,
-                           int availableSeats, double price) {
-        // Create a Firestore instance
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
+    public void createTrip(String driverName, String startLocation, String endLocation, int availableSeats, double price) {
+        db.collection("rides")
+                .whereEqualTo("driverName", driverName)
+                .whereEqualTo("startLocation", startLocation)
+                .whereEqualTo("endLocation", endLocation)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    if (querySnapshot.isEmpty()) {
+                        Map<String, Object> ride = new HashMap<>();
+                        ride.put("driverName", driverName);
+                        ride.put("startLocation", startLocation);
+                        ride.put("endLocation", endLocation);
+                        ride.put("availableSeats", availableSeats);
+                        ride.put("price", price);
 
-        // Create a Trip object or use a Map
-        Map<String, Object> trip = new HashMap<>();
-        trip.put("driverName", driverName);
-        trip.put("startLocation", startLocation);
-        trip.put("endLocation", endLocation);
-        trip.put("availableSeats", availableSeats);
-        trip.put("price", price);
-
-        // Add the trip document to the 'trips' collection
-        db.collection("trips")
-                .add(trip)
-                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                    @Override
-                    public void onSuccess(DocumentReference documentReference) {
-                        System.out.println("Trip uploaded successfully! Document ID: " + documentReference.getId());
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(Exception e) {
-                        System.err.println("Error adding trip: " + e.getMessage());
+                        db.collection("rides").add(ride)
+                                .addOnSuccessListener(documentReference ->
+                                        Log.d(TAG, "Trip created with ID: " + documentReference.getId()))
+                                .addOnFailureListener(e ->
+                                        Log.e(TAG, "Error creating trip", e));
+                    } else {
+                        Log.d(TAG, "Duplicate trip detected, not creating again.");
                     }
                 });
     }
 
-    public List<Ride> searchTrips(String startLocation, String endLocation) {
-        return rides.stream()
-                .filter(trip ->
-                        trip.getStartLocation().toLowerCase().contains(startLocation.toLowerCase()) &&
-                                trip.getEndLocation().toLowerCase().contains(endLocation.toLowerCase()) &&
-                                trip.getAvailableSeats() > 0)
-                .collect(Collectors.toList());
-    }
 
-    public List<Ride> getAllTrips() {
-        return new ArrayList<>(rides);
-    }
-
-    public void requestToJoinTrip(String tripId, String passengerName, String passengerPhone) {
-        RideRequest newRequest = new RideRequest(tripId, passengerName, passengerPhone);
-        rideRequests.add(newRequest);
-    }
-
-    public void approveRequest(String requestId) {
-        for (RideRequest request : rideRequests) {
-            if (request.getId().equals(requestId)) {
-                request.approve();
-                // find the wanted ride and accept the passenger
-                for (Ride ride : rides) {
-                    if (ride.getId().equals(request.getTripId())) {
-                        ride.addPassenger(request.getPassengerName());
-                        break;
-                    }
-                }
-                break;
-            }
-        }
-    }
-
-    public void rejectRequest(String requestId) {
-        rideRequests.removeIf(request -> request.getId().equals(requestId));
-    }
-
-    public List<RideRequest> getTripRequestsForDriver(String driverName) {
-        return rideRequests.stream()
-                .filter(request -> {
-                    // find the ride
-                    for (Ride ride : rides) {
-                        if (ride.getId().equals(request.getTripId()) &&
-                                ride.getDriverName().equals(driverName)) {
-                            return true;
+    public Task<List<Map<String, Object>>> searchTrips(String startLocation, String endLocation) {
+        return db.collection(COLLECTION_RIDES)
+                .whereEqualTo("startLocation", startLocation)
+                .whereEqualTo("endLocation", endLocation)
+                .whereGreaterThan("availableSeats", 0)
+                .whereEqualTo("status", "ACTIVE")
+                .get()
+                .continueWith(task -> {
+                    List<Map<String, Object>> results = new ArrayList<>();
+                    if (task.isSuccessful() && task.getResult() != null) {
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            Map<String, Object> ride = document.getData();
+                            ride.put("id", document.getId());
+                            results.add(ride);
                         }
                     }
-                    return false;
+                    return results;
+                });
+    }
+
+    public Task<List<Map<String, Object>>> getAllTrips() {
+        return db.collection(COLLECTION_RIDES)
+                .whereEqualTo("status", "ACTIVE")
+                .get()
+                .continueWith(task -> {
+                    List<Map<String, Object>> rides = new ArrayList<>();
+                    if (task.isSuccessful() && task.getResult() != null) {
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            Map<String, Object> ride = document.getData();
+                            ride.put("id", document.getId());
+                            rides.add(ride);
+                        }
+                    }
+                    return rides;
+                });
+    }
+
+    public Task<String> requestToJoinTrip(String tripId, Passenger passenger) {
+        Map<String, Object> request = new HashMap<>();
+        request.put("tripId", tripId);
+        request.put("passengerId", passenger.getId());
+        request.put("passengerName", passenger.getFullName());
+        request.put("status", "PENDING");
+        request.put("createdAt", com.google.firebase.Timestamp.now());
+
+        return db.collection(COLLECTION_REQUESTS)
+                .add(request)
+                .continueWith(task -> {
+                    if (task.isSuccessful() && task.getResult() != null) {
+                        return task.getResult().getId();
+                    } else {
+                        throw new Exception("Failed to create request");
+                    }
+                });
+    }
+
+    public Task<Void> approveRequest(String requestId) {
+        return db.runTransaction(transaction -> {
+            // Get the request document
+            DocumentSnapshot requestDoc = transaction.get(
+                    db.collection(COLLECTION_REQUESTS).document(requestId)
+            );
+
+            if (!requestDoc.exists()) {
+                try {
+                    throw new Exception("Request not found");
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            String tripId = requestDoc.getString("tripId");
+            String passengerId = requestDoc.getString("passengerId");
+
+            // Get the ride document
+            DocumentSnapshot rideDoc = transaction.get(
+                    db.collection(COLLECTION_RIDES).document(tripId)
+            );
+
+            if (!rideDoc.exists()) {
+                try {
+                    throw new Exception("Ride not found");
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            // Update available seats
+            Long currentSeats = rideDoc.getLong("availableSeats");
+            if (currentSeats == null || currentSeats <= 0) {
+                try {
+                    throw new Exception("No seats available");
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            // Get current passengers list
+            List<String> passengers = (List<String>) rideDoc.get("passengers");
+            if (passengers == null) {
+                passengers = new ArrayList<>();
+            }
+            passengers.add(passengerId);
+
+            // Update the ride document
+            transaction.update(db.collection(COLLECTION_RIDES).document(tripId),
+                    "availableSeats", currentSeats - 1,
+                    "passengers", passengers);
+
+            // Update the request status
+            transaction.update(db.collection(COLLECTION_REQUESTS).document(requestId),
+                    "status", "APPROVED");
+
+            return null;
+        });
+    }
+
+    public Task<Void> rejectRequest(String requestId) {
+        return db.collection(COLLECTION_REQUESTS)
+                .document(requestId)
+                .update("status", "REJECTED");
+    }
+
+    public Task<List<Map<String, Object>>> getTripRequestsForDriver(String driverName) {
+        return db.collection(COLLECTION_RIDES)
+                .whereEqualTo("driverName", driverName)
+                .get()
+                .continueWithTask(rideTask -> {
+                    if (!rideTask.isSuccessful() || rideTask.getResult() == null) {
+                        throw new Exception("Failed to get rides");
+                    }
+
+                    List<Task<QuerySnapshot>> requestTasks = new ArrayList<>();
+
+                    // Safely iterate through the QuerySnapshot
+                    for (DocumentSnapshot rideDoc : rideTask.getResult().getDocuments()) {
+                        Task<QuerySnapshot> requestTask = db.collection(COLLECTION_REQUESTS)
+                                .whereEqualTo("tripId", rideDoc.getId())
+                                .whereEqualTo("status", "PENDING")
+                                .get();
+                        requestTasks.add(requestTask);
+                    }
+
+                    return Tasks.whenAllSuccess(requestTasks);
                 })
-                .collect(Collectors.toList());
+                .continueWith(task -> {
+                    if (!task.isSuccessful()) {
+                        throw new Exception("Failed to get requests");
+                    }
+
+                    List<Map<String, Object>> requests = new ArrayList<>();
+                    List<Object> results = task.getResult();
+
+                    // Safely process each QuerySnapshot
+                    for (Object result : results) {
+                        if (result instanceof QuerySnapshot) {
+                            QuerySnapshot snapshot = (QuerySnapshot) result;
+                            for (DocumentSnapshot document : snapshot.getDocuments()) {
+                                Map<String, Object> request = new HashMap<>(document.getData());
+                                request.put("id", document.getId());
+                                requests.add(request);
+                            }
+                        }
+                    }
+                    return requests;
+                });
+    }
+
+    // Helper method to convert Firestore document to Ride object
+    private Ride documentToRide(DocumentSnapshot doc) {
+        String driverName = doc.getString("driverName");
+        String startLocation = doc.getString("startLocation");
+        String endLocation = doc.getString("endLocation");
+        Long seats = doc.getLong("availableSeats");
+        Double price = doc.getDouble("price");
+
+        if (driverName == null || startLocation == null || endLocation == null ||
+                seats == null || price == null) {
+            return null;
+        }
+
+        return new Ride(driverName, startLocation, endLocation, seats.intValue(), price);
     }
 }
