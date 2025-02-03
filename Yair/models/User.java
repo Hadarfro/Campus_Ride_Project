@@ -1,7 +1,9 @@
 package com.example.campusride.models;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class User {
     private String userId;
@@ -12,6 +14,7 @@ public class User {
     private double rateGrade;
     private UserRole role; // "Driver" or "Passenger"
     private List<String> rideHistory;
+    private Map<String, String> notifications;
 
     // fileds for Driver
     private String licenseNumber;
@@ -26,6 +29,7 @@ public class User {
         this.rateGrade = rateGrade;
         this.role = role != null ? role : UserRole.UNKNOWN;
         this.rideHistory = new ArrayList<>();
+        this.notifications = new HashMap<>();
 
         if (this.role == UserRole.DRIVER) {
             this.licenseNumber = "";
@@ -42,6 +46,8 @@ public class User {
     public double getRateGrade() { return rateGrade; }
     public UserRole getRole() { return role; }
     public List<String> getRideHistory() { return new ArrayList<>(rideHistory); }
+    public Map<String, String> getNotifications() { return new HashMap<>(notifications); }
+
 
     public void setRole(UserRole role) {
         this.role = role;

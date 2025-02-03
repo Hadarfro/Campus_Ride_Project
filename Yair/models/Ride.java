@@ -41,7 +41,11 @@ public class Ride {
     public RideStatus getStatus() { return status; }
     public List<String> getPassengers() { return new ArrayList<>(passengers); }
 
+    public void setRideId(String rideId) { this.rideId = rideId; }
+
     public void setStatus(RideStatus status) { this.status = status; }
+
+
     public void addPassenger(String passengerId) { passengers.add(passengerId); }
     public void removePassenger(String passengerId) { passengers.remove(passengerId); }
 
