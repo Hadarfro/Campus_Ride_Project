@@ -44,6 +44,8 @@ public class UserRepository {
         userData.put("validStudent", user.isValidStudent());
         userData.put("rateGrade", user.getRateGrade());
         userData.put("role", user.getRole().toString());
+        userData.put("notifications", user.getNotifications());
+
 
         if (user.getRole() == UserRole.DRIVER) {
             userData.put("licenseNumber", user.getLicenseNumber());
@@ -67,7 +69,6 @@ public class UserRepository {
                     if (doc != null && doc.exists()) {
                         UserRole role = UserRole.fromString(doc.getString("role"));
 
-                        // ✅ יצירת משתמש עם כל השדות הבסיסיים
                         User user = new User(
                                 doc.getId(),
                                 doc.getString("name"),
@@ -114,6 +115,14 @@ public class UserRepository {
                 .delete()
                 .addOnSuccessListener(aVoid -> Log.d(TAG, "User deleted successfully"))
                 .addOnFailureListener(e -> Log.w(TAG, "Error deleting user", e));
+    }
+
+    public Task<Void> clearNotifications(String userId) {
+        DocumentReference userRef = db.collection(COLLECTION_USERS).document(userId);
+
+        return userRef.update("notifications", new HashMap<>())
+                .addOnSuccessListener(aVoid -> Log.d(TAG, "All notifications cleared for user: " + userId))
+                .addOnFailureListener(e -> Log.w(TAG, "Failed to clear notifications", e));
     }
 }
 
