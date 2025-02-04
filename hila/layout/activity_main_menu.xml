@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="16dp"
+    android:background="#E6F1F8">
+
+    <!-- Logo -->
+    <TextView
+        android:id="@+id/logo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/campusride_logo"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:padding="16dp"
+        android:gravity="center"
+        android:background="#3D5A80"
+        android:textColor="#FFFFFF"
+        android:layout_marginBottom="32dp" />
+
+    <!-- Profile Button -->
+    <Button
+        android:id="@+id/btn_profile"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/Profile"
+        android:layout_marginBottom="16dp"
+        android:background="#3D5A80"
+        android:textColor="#FFFFFF" />
+
+    <!-- I'm the Driver Button -->
+    <Button
+        android:id="@+id/btn_driver"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/Driver"
+        android:layout_marginBottom="16dp"
+        android:background="#3D5A80"
+        android:textColor="#FFFFFF" />
+
+    <!-- I'm Searching for a Ride Button -->
+    <Button
+        android:id="@+id/btn_search_ride"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/Looking"
+        android:layout_marginBottom="16dp"
+        android:background="#3D5A80"
+        android:textColor="#FFFFFF" />
+
+    <!-- Log Out Button -->
+    <Button
+        android:id="@+id/btn_logout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/LogOut"
+        android:background="#3D5A80"
+        android:textColor="#FFFFFF" />
+
+    <Button
+        android:id="@+id/btn_notifications"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Notifications"
+        android:layout_marginTop="16dp"
+        android:layout_gravity="center_horizontal" />
+</LinearLayout>
