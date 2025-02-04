@@ -48,6 +48,9 @@ public class User {
     public List<String> getRideHistory() { return new ArrayList<>(rideHistory); }
     public Map<String, String> getNotifications() { return new HashMap<>(notifications); }
 
+    public void setUserId(String userId) {
+        this.userId=userId;
+    }
 
     public void setRole(UserRole role) {
         this.role = role;
