@@ -1,4 +1,4 @@
-package com.example.signuplogincampusride;
+package com.example.myapplication;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
@@ -17,6 +17,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.example.myapplication.MainActivity;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.textfield.TextInputEditText;
@@ -24,8 +25,7 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
-
-public class Login extends AppCompatActivity {
+public class Login extends AppCompatActivity{
 
     TextInputEditText editTextEmail, editTextPassword;
     Button buttonLogIn;
@@ -117,3 +117,4 @@ public class Login extends AppCompatActivity {
         });
     }
 }
+
