@@ -36,8 +36,12 @@ public class UserRepository {
     }
 
     public Task<Void> saveUserToFirestore(User user) {
+        DocumentReference userRef = db.collection(COLLECTION_USERS).document();
+        String generatedUserId = userRef.getId();
+        user.setUserId(generatedUserId);
+
         Map<String, Object> userData = new HashMap<>();
-        userData.put("userId", user.getUserId());
+        userData.put("userId", generatedUserId);
         userData.put("name", user.getName());
         userData.put("email", user.getEmail());
         userData.put("phone", user.getPhone());
@@ -53,10 +57,8 @@ public class UserRepository {
         }
 
 
-        return db.collection(COLLECTION_USERS)
-                .document(user.getUserId())
-                .set(userData)
-                .addOnSuccessListener(aVoid -> Log.d(TAG, "User saved successfully"))
+        return userRef.set(userData)
+                .addOnSuccessListener(aVoid -> Log.d(TAG, "User saved successfully with ID: " + generatedUserId))
                 .addOnFailureListener(e -> Log.w(TAG, "Error saving user", e));
     }
 
