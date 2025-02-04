@@ -11,7 +11,6 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -44,18 +43,18 @@ public class NotificationsAdapter extends ArrayAdapter<Map<String, Object>> {
         String message = (String) notification.get("message");
         String type = (String) notification.get("type");
         String notificationId = (String) notification.get("id");
+        String rideId = (String) notification.get("rideId");
+        String passengerId = (String) notification.get("passengerId");
 
         messageView.setText(message);
 
         if ("decision".equals(type)) {
-            // הצגת כפתורים להתראות מסוג decision
             acceptButton.setVisibility(View.VISIBLE);
             declineButton.setVisibility(View.VISIBLE);
 
-            acceptButton.setOnClickListener(v -> updateNotificationStatus(notificationId, "accepted"));
-            declineButton.setOnClickListener(v -> updateNotificationStatus(notificationId, "declined"));
+            acceptButton.setOnClickListener(v -> updateNotificationStatus(notificationId, "accepted", rideId, passengerId));
+            declineButton.setOnClickListener(v -> updateNotificationStatus(notificationId, "declined", rideId, passengerId));
         } else {
-            // הסתרת כפתורים להתראות מסוג info
             acceptButton.setVisibility(View.GONE);
             declineButton.setVisibility(View.GONE);
         }
@@ -63,12 +62,18 @@ public class NotificationsAdapter extends ArrayAdapter<Map<String, Object>> {
         return convertView;
     }
 
-    private void updateNotificationStatus(String notificationId, String status) {
+    private void updateNotificationStatus(String notificationId, String status, String rideId, String passengerId) {
         firestore.collection("users").document(userId).collection("notifications")
                 .document(notificationId)
                 .update("status", status)
                 .addOnSuccessListener(aVoid -> {
                     Toast.makeText(getContext(), "Notification " + status, Toast.LENGTH_SHORT).show();
+
+                    if ("accepted".equals(status)) {
+                        NotificationUtils.sendRideStatusNotification(passengerId, rideId, RideStatus.APPROVED);
+                    } else if ("declined".equals(status)) {
+                        NotificationUtils.sendRideStatusNotification(passengerId, rideId, RideStatus.CANCELLED);
+                    }
                 })
                 .addOnFailureListener(e -> {
                     Toast.makeText(getContext(), "Failed to update notification.", Toast.LENGTH_SHORT).show();
