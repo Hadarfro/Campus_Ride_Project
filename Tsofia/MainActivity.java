@@ -1,4 +1,23 @@
-package com.example.signuplogincampusride;
+package com.example.myapplication;
+
+import android.os.Bundle;
+
+import com.google.android.material.snackbar.Snackbar;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import android.view.View;
+
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
+import androidx.navigation.ui.AppBarConfiguration;
+import androidx.navigation.ui.NavigationUI;
+
+import com.example.myapplication.databinding.ActivityMainBinding;
+
+import android.view.Menu;
+import android.view.MenuItem;
+
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -12,8 +31,10 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.example.myapplication.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -57,4 +78,5 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
 }
