@@ -1,8 +1,14 @@
 package com.example.myapplication;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -14,6 +20,8 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -30,7 +38,10 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
+import java.io.ByteArrayOutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -44,6 +55,11 @@ public class SignUp extends AppCompatActivity {
     FirebaseAuth mAuth;
     ProgressBar progressBar;
     TextView textView;
+
+    private Button btnOpenCamera, btnUploadImage;
+    private Uri imageUri;
+    private FirebaseStorage storage;
+    private StorageReference storageReference;
 
     @Override
     protected void onStart() {
@@ -78,6 +94,29 @@ public class SignUp extends AppCompatActivity {
         editTextID = findViewById(R.id.id_num);
         editPhoneNum = findViewById(R.id.phone_number);
         googleBtn = findViewById(R.id.btn_google_sign_in);
+
+        storage = FirebaseStorage.getInstance();
+        storageReference = storage.getReference();
+        progressBar = findViewById(R.id.progressBar);
+        btnOpenCamera = findViewById(R.id.btn_open_camera);
+        btnUploadImage = findViewById(R.id.btn_upload_image);
+
+        // Permission request for Camera and Gallery
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, 100);
+        }
+
+        btnOpenCamera.setOnClickListener(v -> {
+            Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+                cameraResultLauncher.launch(takePictureIntent);
+            }
+        });
+
+        btnUploadImage.setOnClickListener(v -> {
+            Intent pickPhoto = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            galleryResultLauncher.launch(pickPhoto);
+        });
 
         googleBtn.setOnClickListener(v -> signInGoogle());
 
@@ -167,15 +206,89 @@ public class SignUp extends AppCompatActivity {
             }
     );
 
+    ActivityResultLauncher<Intent> cameraResultLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                    Bitmap photo = (Bitmap) result.getData().getExtras().get("data");
+                    imageUri = getImageUri(this, photo);
+                }
+            }
+    );
+
+    ActivityResultLauncher<Intent> galleryResultLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                    imageUri = result.getData().getData();
+                }
+            }
+    );
+
+    private void uploadImageToFirebase(Uri imageUri) {
+        if (imageUri != null) {
+            progressBar.setVisibility(View.VISIBLE);
+            String userId = mAuth.getCurrentUser().getUid();
+            StorageReference fileReference = storageReference.child("student_cards/" + userId + ".jpg");
+
+            fileReference.putFile(imageUri)
+                    .addOnSuccessListener(taskSnapshot -> {
+                        progressBar.setVisibility(View.GONE);
+                        Toast.makeText(SignUp.this, "Image Uploaded Successfully", Toast.LENGTH_SHORT).show();
+                        fileReference.getDownloadUrl().addOnSuccessListener(uri -> {
+                            String imageUrl = uri.toString();
+                            saveStudentData(imageUrl);
+                        });
+                    })
+                    .addOnFailureListener(e -> {
+                        progressBar.setVisibility(View.GONE);
+                        Toast.makeText(SignUp.this, "Upload Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    });
+        }
+    }
+
+    private void saveStudentData(String imageUrl) {
+        String email = ((TextInputEditText) findViewById(R.id.email)).getText().toString();
+        String fullName = ((TextInputEditText) findViewById(R.id.fullName)).getText().toString();
+        String idNum = ((TextInputEditText) findViewById(R.id.id_num)).getText().toString();
+        String phoneNumber = ((TextInputEditText) findViewById(R.id.phone_number)).getText().toString();
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        Map<String, Object> studentData = new HashMap<>();
+        studentData.put("email", email);
+        studentData.put("fullName", fullName);
+        studentData.put("idNum", idNum);
+        studentData.put("phoneNumber", phoneNumber);
+        studentData.put("imageUrl", imageUrl);
+
+        db.collection("students").document(mAuth.getCurrentUser().getUid())
+                .set(studentData)
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(SignUp.this, "Student registered successfully!", Toast.LENGTH_SHORT).show();
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(SignUp.this, "Registration failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+    }
+
     private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
         AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
-        mAuth.signInWithCredential(credential).addOnCompleteListener(this, task -> {
-            if (task.isSuccessful()) {
-                startActivity(new Intent(SignUp.this, MainActivity.class));
-                finish();
-            } else {
-                Toast.makeText(SignUp.this, "Authentication Failed.", Toast.LENGTH_SHORT).show();
-            }
-        });
+        mAuth.signInWithCredential(credential)
+                .addOnCompleteListener(this, task -> {
+                    if (task.isSuccessful()) {
+                        FirebaseUser user = mAuth.getCurrentUser();
+                        startActivity(new Intent(getApplicationContext(), MainActivity.class));
+                        finish();
+                    } else {
+                        Toast.makeText(SignUp.this, "Google sign-in failed", Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    private Uri getImageUri(Context context, Bitmap bitmap) {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
+        String path = MediaStore.Images.Media.insertImage(context.getContentResolver(), bitmap, "title", null);
+        return Uri.parse(path);
     }
 }
