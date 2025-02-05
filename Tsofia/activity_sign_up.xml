@@ -15,6 +15,7 @@
         android:gravity="center"
         android:padding="15dp">
 
+        <!-- כותרת - הרשמה -->
         <TextView
             android:text="@string/signup"
             android:layout_width="wrap_content"
@@ -23,6 +24,7 @@
             android:textSize="25dp"
             android:layout_marginBottom="20dp" />
 
+        <!-- שדה אימייל -->
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
@@ -34,6 +36,7 @@
                 android:inputType="textEmailAddress" />
         </com.google.android.material.textfield.TextInputLayout>
 
+        <!-- שדה סיסמה -->
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
@@ -45,6 +48,7 @@
                 android:inputType="textPassword" />
         </com.google.android.material.textfield.TextInputLayout>
 
+        <!-- שדה שם מלא -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/fullNameLayout"
             android:layout_width="match_parent"
@@ -58,6 +62,7 @@
                 android:inputType="textPersonName" />
         </com.google.android.material.textfield.TextInputLayout>
 
+        <!-- שדה מספר תעודת זהות -->
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
@@ -66,11 +71,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/id"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
                 android:inputType="number" />
         </com.google.android.material.textfield.TextInputLayout>
 
+        <!-- שדה מספר טלפון -->
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
@@ -82,40 +86,92 @@
                 android:inputType="phone" />
         </com.google.android.material.textfield.TextInputLayout>
 
+        <!-- טקסט "צלם כרטיס סטודנט" -->
+
+        <!-- הוספת כפתורים באותה השורה -->
+
+        <TextView
+            android:id="@+id/student_card_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="15dp"
+            android:layout_marginBottom="10dp"
+            android:gravity="center"
+            android:text="Upload student card:"
+            android:textSize="14dp"
+            android:textStyle="bold" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:weightSum="2">
+
+            <!-- כפתור לפתיחת מצלמה -->
+            <Button
+                android:id="@+id/btn_open_camera"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="Open Camera"
+                android:layout_weight="1"
+                android:layout_marginEnd="10dp"
+                android:backgroundTint="@color/light_green"
+                android:textColor="@android:color/white"/>
+
+            <!-- כפתור להעלאת תמונה -->
+            <Button
+                android:id="@+id/btn_upload_image"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="Upload Image"
+                android:layout_weight="1"
+                android:backgroundTint="@color/light_green"
+                android:textColor="@android:color/white"/>
+        </LinearLayout>
+
+        <!-- אינדיקטור של ProgressBar -->
         <ProgressBar
             android:id="@+id/progressBar"
             android:visibility="gone"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 
-        <Button
-            android:id="@+id/btn_signUp"
-            android:text="@string/signup"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-
-        <Button
-            android:id="@+id/btn_google_sign_in"
-            android:layout_width="wrap_content"
+        <!-- כפתורים הרשמה / התחברות עם גוגל -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/google_logo"
-            android:text="Sign in with Google"
-            android:padding="10dp"
-            android:textColor="@android:color/black"
-            android:textSize="16sp"
-            android:gravity="center"
-            android:layout_gravity="center"/>
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="16dp">
 
+            <Button
+                android:id="@+id/btn_google_sign_in"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start"
+                android:background="@drawable/google_logo"
+                android:gravity="center"
+                android:padding="10dp"
+                android:text="Sign in with Google"
+                android:textSize="16sp" />
+
+            <Button
+                android:id="@+id/btn_signUp"
+                android:text="@string/signup"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <!-- טקסט עם קישור לעמוד התחברות -->
         <TextView
             android:id="@+id/loginNow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:paddingStart="16dp"
             android:text="@string/click_to_login"
-            android:gravity="center"
-            android:textStyle="bold"
             android:textSize="18dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
-
+            android:textStyle="bold" />
     </LinearLayout>
 
 </ScrollView>
